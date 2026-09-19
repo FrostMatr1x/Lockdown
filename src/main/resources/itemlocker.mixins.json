@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.frost.itemlocker.mixin", 
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "InventoryAddMixin",
+    "ContainerClickMixin",
+    "SlotSetMixin",
+    "PlaceBackMixin",
+    "ItemHandlerInsertMixin",
+    "InventorySetItemMixin",
+    "ContainerClickContextMixin",
+    "ArmorItemDispenseMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

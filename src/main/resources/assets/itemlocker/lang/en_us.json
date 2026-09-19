@@ -1,0 +1,13 @@
+{
+  "itemGroup.itemlocker": "Example Mod Tab",
+  "block.itemlocker.example_block": "Example Block",
+  "item.itemlocker.example_item": "Example Item",
+
+  "itemlocker.configuration.title": "Item Locker Configs",
+  "itemlocker.configuration.section.itemlocker.common.toml": "Item Locker Configs",
+  "itemlocker.configuration.section.itemlocker.common.toml.title": "Item Locker Configs",
+  "itemlocker.configuration.items": "Item List",
+  "itemlocker.configuration.logDirtBlock": "Log Dirt Block",
+  "itemlocker.configuration.magicNumberIntroduction": "Magic Number Text",
+  "itemlocker.configuration.magicNumber": "Magic Number"
+}
