@@ -114,4 +114,4 @@ effectBypassItems = [
 
 * **EffectLocker:** Item interaction (drinking potions, eating food) is **never interrupted** — the item is consumed, and sounds/animations play normally. Only the application of the status effect to the player is intercepted.
 * **Registry Identification:** All checks are resolved strictly against valid `ResourceLocation`s (`namespace:path`).
-* **Cheat Logging:** The `itemLockerBan.json` file is only populated by `ItemLocker` when unauthorized prohibited items are confiscated. The effect module does not log entries there.
+* **Cheat Logging:** The `lockdownban.json` file is only populated by `ItemLocker` when unauthorized prohibited items are confiscated. The effect module does not log entries there.
