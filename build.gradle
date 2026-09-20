@@ -123,9 +123,9 @@ configurations {
 }
 
 dependencies {
-    implementation "curse.maven:sophisticated-core-618298:8627791"
+    compileOnly "curse.maven:sophisticated-core-618298:8627791"
 
-    implementation "curse.maven:sophisticated-backpacks-422301:8627841"
+    compileOnly "curse.maven:sophisticated-backpacks-422301:8627841"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

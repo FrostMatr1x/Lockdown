@@ -1,6 +1,6 @@
 package com.frost.lockdown;
 
-import net.minecraft.resources.ResourceKey; // Добавлен необходимый импорт
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
@@ -11,9 +11,6 @@ import java.util.function.Supplier;
 
 public class ItemLockerService {
 
-    /**
-     * Безопасно извлекает ResourceLocation предмета из стака.
-     */
     public static Optional<ResourceLocation> getItemLocation(ItemStack stack) {
         if (stack.isEmpty()) {
             return Optional.empty();
@@ -23,9 +20,6 @@ public class ItemLockerService {
                 .orElse(ResourceLocation.withDefaultNamespace("unknown")));
     }
 
-    /**
-     * Универсальный метод добавления значения в простой список конфигурации.
-     */
     public static boolean addToSimpleList(
             Supplier<List<? extends String>> getter,
             Consumer<List<String>> setter,
@@ -42,9 +36,6 @@ public class ItemLockerService {
         return true;
     }
 
-    /**
-     * Универсальный метод удаления значения из простого списка конфигурации.
-     */
     public static boolean removeFromSimpleList(
             Supplier<List<? extends String>> getter,
             Consumer<List<String>> setter,
@@ -60,9 +51,6 @@ public class ItemLockerService {
         return true;
     }
 
-    /**
-     * Универсальный метод установки пары Ключ=Значение в списках конфигурации уровней.
-     */
     public static void setKeyValue(
             Supplier<List<? extends String>> getter,
             Consumer<List<String>> setter,
@@ -77,9 +65,6 @@ public class ItemLockerService {
         saveAndRebuild(setter, saver, cacheRebuilder, current);
     }
 
-    /**
-     * Универсальный метод удаления ключа из списков конфигурации уровней.
-     */
     public static boolean removeKeyValue(
             Supplier<List<? extends String>> getter,
             Consumer<List<String>> setter,

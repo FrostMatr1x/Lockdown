@@ -5,8 +5,6 @@ import org.slf4j.Logger;
 import com.frost.lockdown.PermissionCheck.LockType;
 import com.mojang.logging.LogUtils;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -24,15 +22,13 @@ public class GameEvents {
         Player player = event.getPlayer();
 
         LockType locktype = PermissionCheck.checkLock(stack, player, false);
+        String itemId = PermissionCheck.getItemId(stack);
 
         if (locktype.equals(LockType.ANNIHILATION))
         {
             stack.setCount(0);
-            
-            player.displayClientMessage(
-                Component.literal("Этот предмет запрещен к использованию на сервере!").withStyle(ChatFormatting.RED), 
-                true
-            );
+
+            Messages.send(player, Config.MSG_ITEM_PROHIBITED, "item", itemId);
 
             LOGGER.warn("Player {} tried to get an item that is not allowed on the server. Item {}", player.getName(), stack.getDisplayName());
             return;
@@ -42,41 +38,30 @@ public class GameEvents {
 
             event.setCanPickup(TriState.FALSE);
 
-            player.displayClientMessage(
-                Component.literal("У вас отсутствует скорборд, обратитесь к тех. админам.").withStyle(ChatFormatting.RED), 
-                true
-            );
+            Messages.send(player, Config.MSG_ITEM_SCOREBOARD_ERROR);
             LOGGER.warn("Player {} don't have base scoreboard", player.getName().getString());
 
             return;
         }
 
         if (locktype.equals(LockType.LOCKED)) {
-            event.setCanPickup(TriState.FALSE); 
+            event.setCanPickup(TriState.FALSE);
             int level = PermissionCheck.getRequiredLevel(stack);
-        
-            player.displayClientMessage(
-                Component.literal("Этот предмет заблокирован на данном уравне! Требуемый уравень " + level).withStyle(ChatFormatting.RED), 
-                true
-            );
+
+            Messages.send(player, Config.MSG_ITEM_LEVEL_LOCKED,
+                    "item", itemId, "level", level, "score", PermissionCheck.getPlayerLevel(player));
         }
 
         if (locktype.equals(LockType.CLICK_BLOCKED)) {
             event.setCanPickup(TriState.FALSE);
 
-            player.displayClientMessage(
-                Component.literal("Этот предмет заблокирован на сервере!").withStyle(ChatFormatting.RED),
-                true
-            );
+            Messages.send(player, Config.MSG_ITEM_BLOCKED, "item", itemId);
         }
 
         if (locktype.equals(LockType.NBT_LOCKED)) {
             event.setCanPickup(TriState.FALSE);
 
-            player.displayClientMessage(
-                Component.literal("Тег блокировки удалён с предмета").withStyle(ChatFormatting.RED),
-                true
-            );
+            Messages.send(player, Config.MSG_ITEM_NBT, "item", itemId);
         }
     }
 }

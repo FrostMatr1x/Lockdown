@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.frost.itemlocker.mixin", 
+  "package": "com.frost.lockdown.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "InventoryAddMixin",
@@ -11,7 +11,8 @@
     "ItemHandlerInsertMixin",
     "InventorySetItemMixin",
     "ContainerClickContextMixin",
-    "ArmorItemDispenseMixin"
+    "ArmorItemDispenseMixin",
+    "LivingEntityEffectMixin"
   ],
   "injectors": {
     "defaultRequire": 1

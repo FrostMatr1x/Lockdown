@@ -17,35 +17,23 @@ import java.util.List;
 
 public class JsonStorageManager {
 
-    // Форматирование JSON файла (красивые отступы)
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    
-    // Путь к файлу (сохраняется в папку config/my_mod_data.json)
-    private static final Path FILE_PATH = FMLPaths.CONFIGDIR.get().resolve("itemLockerBan.json");
 
-    // DTO модель данных с использованием Java 21 Record
+    private static final Path FILE_PATH = FMLPaths.CONFIGDIR.get().resolve("lockdownban.json");
+
     public record DataEntry(String nickname, String date, String item, int quantity) {}
 
-    /**
-     * Статичный метод для добавления записи с явно указанной датой
-     */
     public static synchronized void addEntry(String nickname, String date, String item, int quantity) {
         List<DataEntry> entries = loadEntries();
         entries.add(new DataEntry(nickname, date, item, quantity));
         saveEntries(entries);
     }
 
-    /**
-     * Перегруженный статичный метод: автоматически ставит текущую дату и время
-     */
     public static synchronized void addEntry(String nickname, String item, int quantity) {
         String currentDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         addEntry(nickname, currentDate, item, quantity);
     }
 
-    /**
-     * Чтение всех записей из JSON файла
-     */
     public static List<DataEntry> loadEntries() {
         if (!Files.exists(FILE_PATH)) {
             return new ArrayList<>();
@@ -60,9 +48,6 @@ public class JsonStorageManager {
         }
     }
 
-    /**
-     * Запись всего списка в JSON файл
-     */
     private static void saveEntries(List<DataEntry> entries) {
         try {
             if (FILE_PATH.getParent() != null) {

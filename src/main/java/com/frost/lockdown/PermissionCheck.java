@@ -7,6 +7,8 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.frost.lockdown.compat.SophisticatedBackpacksCompat;
+
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -15,12 +17,9 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemContainerContents;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem;
-import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
+import net.neoforged.fml.ModList;
 
 public class PermissionCheck {
     private static final Set<TagKey<Item>> CHESTS_TAG = Set.of(
@@ -78,7 +77,7 @@ public class PermissionCheck {
                 }
             }
 
-            if (item instanceof BackpackItem) {
+            if (ModList.get().isLoaded("sophisticatedbackpacks")) {
                 LockType backpackResult = checkBackpack(stack, player);
                 if (backpackResult != LockType.UNLOCK) {
                     return backpackResult;
@@ -220,6 +219,17 @@ public class PermissionCheck {
         return BuiltInRegistries.ITEM.getKey(item).toString();
     }
 
+    public static String getItemId(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return "unknown";
+        }
+        return getItemId(stack.getItem());
+    }
+
+    public static int getPlayerLevel(Player player) {
+        return resolvePlayerLevel(player);
+    }
+
     private static LockType checkContainer(ItemStack stack, Player player) {
         ItemContainerContents contents = stack.get(DataComponents.CONTAINER);
         if (contents == null) {
@@ -286,45 +296,7 @@ public class PermissionCheck {
     }
 
     private static LockType checkBackpack(ItemStack stack, Player player) {
-        LockType result = LockType.UNLOCK;
-        BackpackWrapper wrapper = new BackpackWrapper(stack);
-        IItemHandlerModifiable inventory = wrapper.getInventoryHandler();
-
-        int slots = inventory.getSlots();
-        for (int i = 0; i < slots; i++) {
-            ItemStack itemstack = inventory.getStackInSlot(i);
-            if (itemstack.isEmpty()) {
-                continue;
-            }
-
-            LockType lockType = checkLock(itemstack, player, true);
-
-            if (lockType == LockType.ANNIHILATION) {
-                inventory.setStackInSlot(i, ItemStack.EMPTY);
-                continue;
-            }
-
-            if (lockType == LockType.NBT_LOCKED) {
-                inventory.setStackInSlot(i, itemstack);
-                result = LockType.NBT_LOCKED;
-                continue;
-            }
-
-            if (lockType == LockType.CLICK_BLOCKED) {
-                if (result == LockType.UNLOCK || result == LockType.LOCKED) {
-                    result = LockType.CLICK_BLOCKED;
-                }
-                continue;
-            }
-
-            if (lockType == LockType.LOCKED) {
-                if (result == LockType.UNLOCK) {
-                    result = LockType.LOCKED;
-                }
-            }
-        }
-
-        return result;
+        return SophisticatedBackpacksCompat.checkLock(stack, player);
     }
 
     public static int getRequiredLevel(ItemStack stack) {

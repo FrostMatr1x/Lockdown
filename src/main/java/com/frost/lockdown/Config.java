@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.frost.lockdown.effect.EffectLockerConfig;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -14,103 +16,137 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class Config {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
-    /**
-     * Список ID запрещенных предметов (Set<String> в логике, List<String> в конфиге)
-     */
-    public static final ModConfigSpec.ConfigValue<List<? extends String>> PROHIBITED_ITEM_IDS = BUILDER
-            .comment("Список ID предметов, которые запрещено перемещать из хранилищ.")
-            .defineListAllowEmpty(
-                    "creativeItemIds",
-                    List.of(),
-                    Config::validateItemName
-            );
+
+
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> PROHIBITED_ITEM_IDS;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> BLOCKED_ITEM_IDS;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> EXCLUDE_ITEM_IDS;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> ITEM_LEVELS_RAW;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> MOD_LEVELS_RAW;
+    public static final ModConfigSpec.ConfigValue<String> SCOREBOARD_NAME;
+    public static final ModConfigSpec.ConfigValue<String> LOCK_NBT_TAG;
+
+    public static final ModConfigSpec.ConfigValue<String> MSG_ITEM_PROHIBITED;
+    public static final ModConfigSpec.ConfigValue<String> MSG_ITEM_BLOCKED;
+    public static final ModConfigSpec.ConfigValue<String> MSG_ITEM_LEVEL_LOCKED;
+    public static final ModConfigSpec.ConfigValue<String> MSG_ITEM_SCOREBOARD_ERROR;
+    public static final ModConfigSpec.ConfigValue<String> MSG_ITEM_NBT;
+
+
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> EFFECT_BANNED;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> EFFECT_CAPPED;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> EFFECT_BYPASS_ITEMS;
+
+    public static final ModConfigSpec.ConfigValue<String> MSG_EFFECT_BLOCKED;
+    public static final ModConfigSpec.ConfigValue<String> MSG_EFFECT_CAPPED;
+    public static final ModConfigSpec.ConfigValue<String> MSG_ITEM_USE_BLOCKED;
+    public static final ModConfigSpec.ConfigValue<String> MSG_EFFECT_BANNED_CHAT;
+    public static final ModConfigSpec.ConfigValue<String> MSG_EFFECT_UNBANNED_CHAT;
+    public static final ModConfigSpec.ConfigValue<String> MSG_EFFECT_CAPPED_CHAT;
+    public static final ModConfigSpec.ConfigValue<String> MSG_EFFECT_CAP_REMOVED_CHAT;
+    public static final ModConfigSpec.ConfigValue<String> MSG_EFFECT_CLEARED_CHAT;
+    public static final ModConfigSpec.ConfigValue<String> MSG_BYPASS_ADDED_CHAT;
+    public static final ModConfigSpec.ConfigValue<String> MSG_BYPASS_REMOVED_CHAT;
+
+    static {
+        BUILDER.comment("ItemLocker module settings.").push("itemLocker");
+        PROHIBITED_ITEM_IDS = BUILDER
+                .comment("List of item IDs that are completely prohibited (destroyed upon attempt to acquire).")
+                .defineListAllowEmpty("prohibitedItemIds", List.of(), Config::validateItemName);
+        BLOCKED_ITEM_IDS = BUILDER
+                .comment("List of item IDs that are blocked without being destroyed and without a JSON log.")
+                .defineListAllowEmpty("blockedItemIds", List.of(), Config::validateItemName);
+        EXCLUDE_ITEM_IDS = BUILDER
+                .comment("List of excluded item IDs that are allowed at any level.")
+                .defineListAllowEmpty("excludeItemIds", List.of(), Config::validateItemName);
+        ITEM_LEVELS_RAW = BUILDER
+                .comment("List of items and their required levels in the format 'modid:item_id=level'. Example: 'minecraft:diamond=5'")
+                .defineListAllowEmpty("itemLevels", List.of(), Config::validateItemLevelString);
+        MOD_LEVELS_RAW = BUILDER
+                .comment("List of mods and their required levels in the format 'modid=level'. Example: 'minecraft=5'")
+                .defineListAllowEmpty("modLevels", List.of(), Config::validateModLevelString);
+        SCOREBOARD_NAME = BUILDER
+                .comment("Name of the Scoreboard from which the player's level is retrieved.")
+                .define("scoreboard", "", Config::validateScoreboardName);
+        LOCK_NBT_TAG = BUILDER
+                .comment("Name of the NBT tag in custom_data that locks the item until the tag is removed.")
+                .define("lockNbtTag", "lockdown:locked");
+
+        BUILDER.comment("ItemLocker module messages. Placeholders: %item%, %player%, %level%, %score%.").push("messages");
+        MSG_ITEM_PROHIBITED = BUILDER
+                .comment("Message when a prohibited item is destroyed. Placeholders: %item%")
+                .define("itemProhibitedMessage", "Item %item% is prohibited on the server and was destroyed.");
+        MSG_ITEM_BLOCKED = BUILDER
+                .comment("Message when an item is blocked. Placeholders: %item%")
+                .define("itemBlockedMessage", "Item %item% is blocked on the server.");
+        MSG_ITEM_LEVEL_LOCKED = BUILDER
+                .comment("Message when an item is locked by level. Placeholders: %item%, %level%, %score%")
+                .define("itemLevelLockedMessage", "Item %item% is locked. Required level: %level%, your level: %score%.");
+        MSG_ITEM_SCOREBOARD_ERROR = BUILDER
+                .comment("Message when the scoreboard is missing.")
+                .define("itemScoreboardErrorMessage", "You are missing the required scoreboard. Please contact server administration.");
+        MSG_ITEM_NBT = BUILDER
+                .comment("Message when the lock tag is removed. Placeholders: %item%")
+                .define("itemNbtMessage", "The lock tag has been removed from item %item%.");
+        BUILDER.pop();
+        BUILDER.pop();
+
+        BUILDER.comment("EffectLocker module settings.").push("effectLocker");
+        EFFECT_BANNED = BUILDER
+                .comment("List of completely banned effects in the format 'modid:effect'.")
+                .defineListAllowEmpty("bannedEffects", List.of(), Config::validateEffectName);
+        EFFECT_CAPPED = BUILDER
+                .comment("List of capped effects in the format 'modid:effect=level'.")
+                .defineListAllowEmpty("cappedEffects", List.of(), Config::validateEffectCapString);
+        EFFECT_BYPASS_ITEMS = BUILDER
+                .comment("Items allowed to apply the effect. Format: 'modid:effect|modid:item[;modid:item2...]'")
+                .defineListAllowEmpty("effectBypassItems", List.of(), Config::validateEffectBypassString);
+
+        BUILDER.comment("EffectLocker module messages. Placeholders: %item%, %player%, %effect%, %level%, %score%, %count%.").push("messages");
+        MSG_EFFECT_BLOCKED = BUILDER
+                .comment("Message when an effect is blocked. Placeholders: %effect%")
+                .define("effectBlockedMessage", "Effect %effect% is prohibited on the server.");
+        MSG_EFFECT_CAPPED = BUILDER
+                .comment("Message when an effect level is capped. Placeholders: %effect%, %level%")
+                .define("effectCappedMessage", "Effect %effect% is capped at level %level%.");
+        MSG_ITEM_USE_BLOCKED = BUILDER
+                .comment("Message when using an item that applies a prohibited effect. Placeholders: %item%, %effect%")
+                .define("itemUseBlockedMessage", "Item %item% cannot apply effect %effect%.");
+        MSG_EFFECT_BANNED_CHAT = BUILDER
+                .comment("Message for command /lockdown effect ban. Placeholders: %effect%, %count%")
+                .define("effectBannedChat", "Effect %effect% has been banned and removed from %count% players.");
+        MSG_EFFECT_UNBANNED_CHAT = BUILDER
+                .comment("Message for command /lockdown effect unban. Placeholders: %effect%")
+                .define("effectUnbannedChat", "Effect %effect% has been unbanned.");
+        MSG_EFFECT_CAPPED_CHAT = BUILDER
+                .comment("Message for command /lockdown effect cap. Placeholders: %effect%, %level%")
+                .define("effectCappedChat", "Max level for effect %effect% is set to %level%.");
+        MSG_EFFECT_CAP_REMOVED_CHAT = BUILDER
+                .comment("Message for command /lockdown effect uncap. Placeholders: %effect%")
+                .define("effectCapRemovedChat", "Level cap for effect %effect% has been removed.");
+        MSG_EFFECT_CLEARED_CHAT = BUILDER
+                .comment("Message for command /lockdown effect clear.")
+                .define("effectClearedChat", "Effect lists, caps, and bypasses have been cleared.");
+        MSG_BYPASS_ADDED_CHAT = BUILDER
+                .comment("Message for command /lockdown effect bypass add. Placeholders: %effect%, %item%")
+                .define("bypassAddedChat", "Item %item% can now apply effect %effect%.");
+        MSG_BYPASS_REMOVED_CHAT = BUILDER
+                .comment("Message for command /lockdown effect bypass remove. Placeholders: %effect%, %item%")
+                .define("bypassRemovedChat", "Item %item% can no longer apply effect %effect%.");
+        BUILDER.pop();
+        BUILDER.pop();
+    }
+
     private static volatile Set<String> prohibitedItemIdsCache = Set.of();
-        
-    /**
-     *  Список заперщенных на уравне предметов. В конфиге это список строк вида "modid:item=level"
-     */
-    public static final ModConfigSpec.ConfigValue<List<? extends String>> ITEM_LEVELS_RAW = BUILDER
-            .comment("Список предметов и их требуемых уровней в формате 'modid:item_id=level'. Пример: 'minecraft:diamond=5'")
-            .defineListAllowEmpty(
-                    "itemLevels",
-                    List.of(),
-                    Config::validateItemLevelString
-            );
-    private static volatile Map<String, Integer> itemLevelIdsCache = new HashMap<>();
-    
-    /**
-     *  Список заперщенных на уравне модов. В конфиге это список строк вида "modid=level"
-     */
-    public static final ModConfigSpec.ConfigValue<List<? extends String>> MOD_LEVELS_RAW = BUILDER
-            .comment("Список модов и их требуемых уровней в формате 'modid=level'. Пример: 'minecraft=5'")
-            .defineListAllowEmpty(
-                    "modLevels",
-                    List.of(),
-                    Config::validateModLevelString
-            );
-    private static volatile Map<String, Integer> modLevelIdsCache = new HashMap<>();
-
-    public static final ModConfigSpec.ConfigValue<String> SCOREBOARD_NAME = BUILDER
-            .comment("Название Scoreboard")
-            .define(
-                    "scoreboard",
-                     "",
-                     Config::validateScoreboardName
-            );
-
-    /**
-     * Список ID предметов, которые блокируются без уничтожения и без JSON-лога.
-     */
-    public static final ModConfigSpec.ConfigValue<List<? extends String>> BLOCKED_ITEM_IDS = BUILDER
-            .comment("Список ID предметов, которые блокируются без уничтожения и без JSON-лога.")
-            .defineListAllowEmpty(
-                    "blockedItemIds",
-                    List.of(),
-                    Config::validateItemName
-            );
     private static volatile Set<String> blockedItemIdsCache = Set.of();
-
-    /**
-     * Имя NBT-тега в custom_data, блокирующего предмет до удаления тега.
-     */
-    public static final ModConfigSpec.ConfigValue<String> LOCK_NBT_TAG = BUILDER
-            .comment("Имя NBT-тега в custom_data, который блокирует предмет до удаления тега.")
-            .define(
-                    "lockNbtTag",
-                    "itemlocker:locked"
-            );
-
-    private static volatile int configVersion = 0;
-
-    /**
-     * Список ID исключений в моде предметов (Set<String> в логике, List<String> в конфиге)
-     */
-    public static final ModConfigSpec.ConfigValue<List<? extends String>> EXCLUDE_ITEM_IDS = BUILDER
-            .comment("Список исключенных ID предметов, которые разрешины на любом level.")
-            .defineListAllowEmpty(
-                    "excludeItemIds",
-                    List.of(),
-                    Config::validateItemName
-            );
     private static volatile Set<String> excludeItemIdsCache = Set.of();
-
-    /**
-     * Список ID исключений в моде предметов (Set<String> в логике, List<String> в конфиге)
-     */
-    public static final ModConfigSpec.ConfigValue<List<? extends String>> STORAGE_IDS = BUILDER
-            .comment("Список исключенных ID предметов, которые разрешины на любом level.")
-            .defineListAllowEmpty(
-                    "excludeItemIds",
-                    List.of(),
-                    Config::validateItemName
-            );
-    private static volatile Set<String> storageIdsCache = Set.of();
+    private static volatile Map<String, Integer> itemLevelIdsCache = new HashMap<>();
+    private static volatile Map<String, Integer> modLevelIdsCache = new HashMap<>();
+    private static volatile int configVersion = 0;
 
     static final ModConfigSpec SPEC = BUILDER.build();
 
-    // ВАЛИДАТОРЫ
 
-    // Проверка, что строка является валидным ID предмета
     private static boolean validateItemName(final Object obj) {
         if (!(obj instanceof String itemName)) return false;
         try {
@@ -120,147 +156,138 @@ public class Config {
         }
     }
 
+    private static boolean validateEffectName(final Object obj) {
+        if (!(obj instanceof String effectName)) return false;
+        try {
+            return BuiltInRegistries.MOB_EFFECT.containsKey(ResourceLocation.parse(effectName));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static boolean validateEffectCapString(final Object obj) {
+        if (!(obj instanceof String str)) return false;
+        String[] parts = str.split("=", 2);
+        if (parts.length != 2) return false;
+        try {
+            if (!BuiltInRegistries.MOB_EFFECT.containsKey(ResourceLocation.parse(parts[0].trim()))) {
+                return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return parseAmplifier(parts[1].trim()) >= 0;
+    }
+
+    private static boolean validateEffectBypassString(final Object obj) {
+        return obj instanceof String str && EffectLockerConfig.isValidBypassEntry(str);
+    }
+
     private static boolean validateScoreboardName(final Object obj) {
         return true;
     }
 
-    // Проверка, что строка имеет формат "item_id=level" и item_id существует
     private static boolean validateItemLevelString(final Object obj) {
         if (!(obj instanceof String str)) return false;
-        
         String[] parts = str.split("=");
         if (parts.length != 2) return false;
-        
-        String itemId = parts[0].trim();
-        String levelStr = parts[1].trim();
-        
-        if (!BuiltInRegistries.ITEM.containsKey(ResourceLocation.parse(itemId))) {
+        try {
+            if (!BuiltInRegistries.ITEM.containsKey(ResourceLocation.parse(parts[0].trim()))) {
+                return false;
+            }
+        } catch (Exception e) {
             return false;
         }
-        
         try {
-            Integer.parseInt(levelStr);
+            Integer.parseInt(parts[1].trim());
             return true;
         } catch (NumberFormatException e) {
             return false;
         }
     }
 
-    // Проверка, что строка имеет формат "item_id=level" и item_id существует
     private static boolean validateModLevelString(final Object obj) {
         if (!(obj instanceof String str)) return false;
-        
         String[] parts = str.split("=");
         if (parts.length != 2) return false;
-    
-        String levelStr = parts[1].trim();
-        
         try {
-            Integer.parseInt(levelStr);
+            Integer.parseInt(parts[1].trim());
             return true;
         } catch (NumberFormatException e) {
             return false;
         }
     }
 
-    // УДОБНЫЕ МЕТОДЫ ДЛЯ ПОЛУЧЕНИЯ ДАННЫХ В КОДЕ 
+    public static int parseAmplifier(String value) {
+        try {
+            int amplifier = Integer.parseInt(value);
+            return (amplifier < 0 || amplifier > 255) ? -1 : amplifier;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
 
-    /**
-     * Возвращает Set<String> с ID полностью запрещённых предметов для быстрой проверки.
-     */
+
     public static Set<String> getProhibitedItemIdsSet() {
         return prohibitedItemIdsCache;
     }
 
-    /**
-     * Возвращает Set<String> с ID запрещенных на левеле предметов для быстрой проверки.
-     */
     public static Map<String, Integer> getItemLevelIdsMap() {
         return itemLevelIdsCache;
     }
 
-    /**
-     * Возвращает Set<String> с ID запрещенных на левеле предметов для быстрой проверки.
-     */
     public static Map<String, Integer> getModLevelIdsMap() {
         return modLevelIdsCache;
     }
 
-    /**
-     * Возвращает Set<String> с ID исключений предметов для быстрой проверки.
-     */
     public static Set<String> getModExcludeIdsSet() {
         return excludeItemIdsCache;
     }
 
-    /**
-     * Возвращает Set<String> с ID блокируемых предметов для быстрой проверки.
-     */
     public static Set<String> getBlockedItemIdsSet() {
         return blockedItemIdsCache;
     }
 
-    /**
-     * Возвращает имя NBT-тега блокировки.
-     */
     public static String getLockNbtTag() {
         return LOCK_NBT_TAG.get();
     }
 
-    /**
-     * Возвращает текущую версию конфигурации (инкрементируется при каждой пересборке кэша).
-     */
     public static int getConfigVersion() {
         return configVersion;
     }
 
-    /**
-     * Пересобирает кэш. Вызывать при загрузке конфига и после любого .set()/.save().
-     */
     public static void rebuildProhibitedItemIdsCache() {
         prohibitedItemIdsCache = new HashSet<>(PROHIBITED_ITEM_IDS.get());
         configVersion++;
     }
 
-    /**
-     * Пересобирает кэш. Вызывать при загрузке конфига и после любого .set()/.save().
-     */
+    public static void rebuildBlockedItemIdsCache() {
+        blockedItemIdsCache = new HashSet<>(BLOCKED_ITEM_IDS.get());
+        configVersion++;
+    }
+
     public static void rebuildExcludeItemIdsCache() {
         excludeItemIdsCache = new HashSet<>(EXCLUDE_ITEM_IDS.get());
         configVersion++;
     }
 
-    /**
-     * Пересобирает кэш. Вызывать при загрузке конфига и после любого .set()/.save().
-     */
     public static void rebuildItemLevelIdsCache() {
-        itemLevelIdsCache.clear();
-
+        Map<String, Integer> rebuilt = new HashMap<>();
         for (var itemAndLevel : ITEM_LEVELS_RAW.get()) {
-            String[] split = itemAndLevel.split("=");
-            itemLevelIdsCache.put(split[0], Integer.parseInt(split[1]));
+            String[] split = itemAndLevel.split("=", 2);
+            rebuilt.put(split[0].trim(), Integer.parseInt(split[1].trim()));
         }
+        itemLevelIdsCache = rebuilt;
         configVersion++;
     }
 
-    /**
-     * Пересобирает кэш. Вызывать при загрузке конфига и после любого .set()/.save().
-     */
     public static void rebuildModLevelIdsCache() {
-        modLevelIdsCache.clear();
-
+        Map<String, Integer> rebuilt = new HashMap<>();
         for (var modAndLevel : MOD_LEVELS_RAW.get()) {
-            String[] split = modAndLevel.split("=");
-            modLevelIdsCache.put(split[0], Integer.parseInt(split[1]));
+            String[] split = modAndLevel.split("=", 2);
+            rebuilt.put(split[0].trim(), Integer.parseInt(split[1].trim()));
         }
-        configVersion++;
-    }
-
-    /**
-     * Пересобирает кэш блокируемых предметов. Вызывать при загрузке конфига и после любого .set()/.save().
-     */
-    public static void rebuildBlockedItemIdsCache() {
-        blockedItemIdsCache = new HashSet<>(BLOCKED_ITEM_IDS.get());
+        modLevelIdsCache = rebuilt;
         configVersion++;
     }
 
@@ -270,9 +297,10 @@ public class Config {
         if (event instanceof ModConfigEvent.Unloading) return;
 
         Config.rebuildProhibitedItemIdsCache();
+        Config.rebuildBlockedItemIdsCache();
         Config.rebuildExcludeItemIdsCache();
         Config.rebuildItemLevelIdsCache();
         Config.rebuildModLevelIdsCache();
-        Config.rebuildBlockedItemIdsCache();
+        EffectLockerConfig.rebuild();
     }
 }

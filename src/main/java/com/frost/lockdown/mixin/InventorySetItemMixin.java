@@ -8,11 +8,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.frost.lockdown.Config;
+import com.frost.lockdown.Messages;
 import com.frost.lockdown.PermissionCheck;
 import com.frost.lockdown.PermissionCheck.LockType;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -27,14 +27,12 @@ public class InventorySetItemMixin {
     private void itemlocker$onSetItem(int slot, ItemStack stack, CallbackInfo ci) {
 
         LockType locktype = PermissionCheck.checkLock(stack, player, false);
+        String itemId = PermissionCheck.getItemId(stack);
 
         if (locktype == LockType.ANNIHILATION) {
             stack.setCount(0);
 
-            player.displayClientMessage(
-                Component.literal("Этот предмет запрещен к использованию на сервере!").withStyle(ChatFormatting.RED),
-                true
-            );
+            Messages.send(player, Config.MSG_ITEM_PROHIBITED, "item", itemId);
 
             LOGGER.warn("Player {} tried to get an item that is not allowed on the server. Item {}", player.getName(), stack.getDisplayName());
             return;
@@ -43,10 +41,7 @@ public class InventorySetItemMixin {
         if (locktype == LockType.ERROR) {
             ci.cancel();
 
-            player.displayClientMessage(
-                Component.literal("У вас отсутствует скорборд, обратитесь к тех. админам.").withStyle(ChatFormatting.RED),
-                true
-            );
+            Messages.send(player, Config.MSG_ITEM_SCOREBOARD_ERROR);
             LOGGER.error("Player {} don't have base scoreboard", player.getName().getString());
 
             return;
@@ -60,17 +55,8 @@ public class InventorySetItemMixin {
             if (!stack.isEmpty()) {
                 player.drop(stack.copy(), false);
 
-                String levelMessage = "Этот предмет заблокирован на данном уровне! ";
-
-                if (level != -1)
-                {
-                    levelMessage += "Требуемый уровень " + level;
-                }
-
-                player.displayClientMessage(
-                    Component.literal(levelMessage).withStyle(ChatFormatting.RED),
-                    true
-                );
+                Messages.send(player, Config.MSG_ITEM_LEVEL_LOCKED,
+                        "item", itemId, "level", level, "score", PermissionCheck.getPlayerLevel(player));
                 stack.setCount(0);
             }
             return;
@@ -79,20 +65,14 @@ public class InventorySetItemMixin {
         if (locktype == LockType.CLICK_BLOCKED) {
             ci.cancel();
 
-            player.displayClientMessage(
-                Component.literal("Этот предмет заблокирован на сервере!").withStyle(ChatFormatting.RED),
-                true
-            );
+            Messages.send(player, Config.MSG_ITEM_BLOCKED, "item", itemId);
             return;
         }
 
         if (locktype == LockType.NBT_LOCKED) {
             ci.cancel();
 
-            player.displayClientMessage(
-                Component.literal("Тег блокировки удалён с предмета").withStyle(ChatFormatting.RED),
-                true
-            );
+            Messages.send(player, Config.MSG_ITEM_NBT, "item", itemId);
         }
     }
 }
