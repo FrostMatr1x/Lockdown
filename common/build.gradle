@@ -3,7 +3,9 @@ plugins {
 }
 
 architectury {
-    common("fabric", "neoforge")
+    common(["fabric", "neoforge"] as String[]) {
+        it.platformPackage "neoforge", "forge"
+    }
 }
 
 loom {

@@ -30,3 +30,9 @@ modId="sophisticatedbackpacks"
 type="optional"
 ordering="AFTER"
 side="BOTH"
+
+[[mixins]]
+config="lockdown.mixins.json"
+
+[[mixins]]
+config="lockdown.neoforge.mixins.json"

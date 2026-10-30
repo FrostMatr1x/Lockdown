@@ -8,7 +8,6 @@
     "ContainerClickMixin",
     "SlotSetMixin",
     "PlaceBackMixin",
-    "ItemHandlerInsertMixin",
     "InventorySetItemMixin",
     "ContainerClickContextMixin",
     "ArmorItemDispenseMixin",
