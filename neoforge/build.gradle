@@ -15,12 +15,10 @@ loom {
 
     runs {
         client {
-            client()
             getSystemProperties().put("neoforge.enabledGameTestNamespaces", rootProject.mod_id)
         }
 
         server {
-            server()
             getSystemProperties().put("neoforge.enabledGameTestNamespaces", rootProject.mod_id)
         }
 

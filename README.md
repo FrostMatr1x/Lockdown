@@ -2,12 +2,12 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Minecraft-1.21.1-brightgreen?style=for-the-badge&logo=minecraft" alt="Minecraft 1.21.1">
-  <img src="https://img.shields.io/badge/Loader-NeoForge-orange?style=for-the-badge" alt="NeoForge">
+  <img src="https://img.shields.io/badge/Loader-NeoForge%20%7C%20Fabric-orange?style=for-the-badge" alt="NeoForge and Fabric">
   <img src="https://img.shields.io/badge/Environment-Server-blue?style=for-the-badge" alt="Server-Side">
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
 </p>
 
-**Lockdown** is a flexible, server-side gameplay management tool for Minecraft (NeoForge 1.21.1). The mod merges advanced item restrictions (scoreboard-based levels, NBT locks, bans) and granular status effect control.
+**Lockdown** is a flexible, server-side gameplay management tool for Minecraft 1.21.1 (NeoForge and Fabric). The mod merges advanced item restrictions (scoreboard-based levels, NBT locks, bans) and granular status effect control.
 
 Ideal for **RPG modpacks**, progression/staging-based servers, and fine-grained gameplay balance.
 
@@ -32,7 +32,7 @@ Ideal for **RPG modpacks**, progression/staging-based servers, and fine-grained 
 ## 📥 Installation
 
 1. Download the latest `.jar` from [Releases](../../releases) or build it locally (`./gradlew build`).
-2. Drop `lockdown-<version>.jar` into your server's `mods/` directory.
+2. Drop `lockdown-neoforge-<version>.jar` or `lockdown-fabric-<version>.jar` into your server's `mods/` directory. Built jars are placed in `neoforge/build/libs` and `fabric/build/libs`.
 3. Launch the server once to generate the default configuration file: `config/lockdown-server.toml`.
 
 ---
