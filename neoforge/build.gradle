@@ -1,0 +1,98 @@
+plugins {
+    id "dev.architectury.loom"
+    id "com.gradleup.shadow"
+}
+
+architectury {
+    platformSetupLoomIde()
+    neoForge {
+        platformPackage = "forge"
+    }
+}
+
+loom {
+    silentMojangMappingsLicense()
+
+    runs {
+        client {
+            client()
+            getSystemProperties().put("neoforge.enabledGameTestNamespaces", rootProject.mod_id)
+        }
+
+        server {
+            server()
+            getSystemProperties().put("neoforge.enabledGameTestNamespaces", rootProject.mod_id)
+        }
+
+        configureEach {
+            getSystemProperties().put("forge.logging.markers", "REGISTRIES")
+        }
+    }
+
+    mods {
+        "${rootProject.mod_id}" {
+            sourceSet "main"
+        }
+    }
+}
+
+configurations {
+    common
+    shadowCommon
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentNeoForge.extendsFrom common
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+    mappings loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${rootProject.parchment_minecraft_version}:${rootProject.parchment_mappings_version}@zip")
+    }
+
+    neoForge "net.neoforged:neoforge:${rootProject.neo_version}"
+
+    common(project(path: ":common", configuration: "namedElements")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionNeoForge")) { transitive false }
+}
+
+base {
+    archivesName = "${rootProject.mod_id}-neoforge"
+}
+
+sourceSets.main.resources {
+    srcDir("src/generated/resources")
+    exclude("**/*.bbmodel")
+    exclude("src/generated/**/.cache")
+}
+
+def resourceProperties = [version: project.version.toString()]
+
+processResources {
+    inputs.property "version", resourceProperties.version
+
+    filesMatching("META-INF/neoforge.mods.toml") {
+        expand resourceProperties
+    }
+}
+
+shadowJar {
+    exclude "fabric.mod.json"
+    exclude "architectury.common.json"
+
+    configurations = [project.configurations.shadowCommon]
+    archiveClassifier = "dev-shadow"
+}
+
+remapJar {
+    input.set shadowJar.archiveFile
+    dependsOn shadowJar
+    archiveClassifier = null
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}

@@ -66,4 +66,12 @@ subprojects {
     tasks.withType(net.fabricmc.loom.task.RemapJarTask).configureEach {
         notCompatibleWithConfigurationCache("Loom RemapJarTask captures the project instance")
     }
+
+    tasks.withType(dev.architectury.plugin.PrepareArchitecturyTransformer).configureEach {
+        notCompatibleWithConfigurationCache("Architectury transformer task captures the project instance")
+    }
+
+    tasks.withType(dev.architectury.plugin.TransformingTask).configureEach {
+        notCompatibleWithConfigurationCache("Architectury transforming task captures the project instance")
+    }
 }
