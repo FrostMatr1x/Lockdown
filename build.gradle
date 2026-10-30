@@ -62,4 +62,8 @@ subprojects {
         options.encoding = "UTF-8"
         options.release = 21
     }
+
+    tasks.withType(net.fabricmc.loom.task.RemapJarTask).configureEach {
+        notCompatibleWithConfigurationCache("Loom RemapJarTask captures the project instance")
+    }
 }
