@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "lockdown",
+  "version": "${version}",
+  "name": "Lockdown",
+  "description": "Blocks access to items that the player cannot obtain.",
+  "authors": [
+    "FrostMatrix"
+  ],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.frost.lockdown.fabric.LockdownFabric"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "fabric-api": "*",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  }
+}
