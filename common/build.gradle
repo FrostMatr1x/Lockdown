@@ -10,6 +10,10 @@ architectury {
 
 loom {
     silentMojangMappingsLicense()
+
+    mixin {
+        useLegacyMixinAp = false
+    }
 }
 
 dependencies {
@@ -18,4 +22,6 @@ dependencies {
         officialMojangMappings()
         parchment("org.parchmentmc.data:parchment-${rootProject.parchment_minecraft_version}:${rootProject.parchment_mappings_version}@zip")
     }
+
+    compileOnly "net.fabricmc:sponge-mixin:0.15.2+mixin.0.8.7"
 }

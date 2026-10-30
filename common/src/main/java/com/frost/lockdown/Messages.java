@@ -1,17 +1,18 @@
 package com.frost.lockdown;
 
+import com.frost.lockdown.config.Setting;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class Messages {
 
     private Messages() {
     }
 
-    public static String get(ModConfigSpec.ConfigValue<String> key, Object... placeholders) {
+    public static String get(Setting<String> key, Object... placeholders) {
         return format(key.get(), placeholders);
     }
 
@@ -28,15 +29,15 @@ public final class Messages {
         return result;
     }
 
-    public static MutableComponent component(ModConfigSpec.ConfigValue<String> key, Object... placeholders) {
+    public static MutableComponent component(Setting<String> key, Object... placeholders) {
         return Component.literal(get(key, placeholders));
     }
 
-    public static MutableComponent red(ModConfigSpec.ConfigValue<String> key, Object... placeholders) {
+    public static MutableComponent red(Setting<String> key, Object... placeholders) {
         return component(key, placeholders).withStyle(ChatFormatting.RED);
     }
 
-    public static void send(Player player, ModConfigSpec.ConfigValue<String> key, Object... placeholders) {
+    public static void send(Player player, Setting<String> key, Object... placeholders) {
         player.displayClientMessage(red(key, placeholders), true);
     }
 }

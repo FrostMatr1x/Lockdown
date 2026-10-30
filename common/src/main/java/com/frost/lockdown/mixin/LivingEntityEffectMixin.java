@@ -2,7 +2,9 @@ package com.frost.lockdown.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.frost.lockdown.Config;
 import com.frost.lockdown.effect.EffectLockerConfig;
@@ -12,11 +14,48 @@ import com.frost.lockdown.effect.UsedItemContext;
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityEffectMixin {
+
+    @Inject(method = "addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z",
+            at = @At("HEAD"), cancellable = true)
+    private void lockdown$blockBannedEffect(MobEffectInstance effectInstance, Entity source, CallbackInfoReturnable<Boolean> cir) {
+        if (effectInstance == null) {
+            return;
+        }
+
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (self.level().isClientSide) {
+            return;
+        }
+        if (!EffectLockerConfig.isBanned(effectInstance.getEffect())) {
+            return;
+        }
+        if (!(self instanceof Player player)) {
+            return;
+        }
+        if (player.isCreative() || player.isSpectator()) {
+            return;
+        }
+
+        String usedItemId = UsedItemContext.getItemIdFor(player);
+        if (usedItemId != null && EffectLockerConfig.isBypassed(effectInstance.getEffect(), usedItemId)) {
+            return;
+        }
+
+        cir.setReturnValue(false);
+
+        String effectId = effectId(effectInstance.getEffect());
+        if (usedItemId != null) {
+            Notifications.send(player, Config.MSG_ITEM_USE_BLOCKED, "item", usedItemId, "effect", effectId);
+        } else {
+            Notifications.send(player, Config.MSG_EFFECT_BLOCKED, "effect", effectId);
+        }
+    }
 
     @ModifyVariable(method = "addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z",
             at = @At("HEAD"), argsOnly = true, index = 1)

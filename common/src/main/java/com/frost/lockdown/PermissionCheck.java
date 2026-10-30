@@ -7,7 +7,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.frost.lockdown.compat.SophisticatedBackpacksCompat;
+import com.frost.lockdown.compat.BackpackScanner;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -19,7 +19,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemContainerContents;
-import net.neoforged.fml.ModList;
 
 public class PermissionCheck {
     private static final Set<TagKey<Item>> CHESTS_TAG = Set.of(
@@ -77,8 +76,8 @@ public class PermissionCheck {
                 }
             }
 
-            if (ModList.get().isLoaded("sophisticatedbackpacks")) {
-                LockType backpackResult = checkBackpack(stack, player);
+            if (BackpackScanner.isAvailable()) {
+                LockType backpackResult = BackpackScanner.checkLock(stack, player);
                 if (backpackResult != LockType.UNLOCK) {
                     return backpackResult;
                 }
@@ -295,9 +294,6 @@ public class PermissionCheck {
         return list;
     }
 
-    private static LockType checkBackpack(ItemStack stack, Player player) {
-        return SophisticatedBackpacksCompat.checkLock(stack, player);
-    }
 
     public static int getRequiredLevel(ItemStack stack) {
         if (stack.isEmpty()) {

@@ -9,12 +9,20 @@ import net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
 import net.p3pp3rf1y.sophisticatedcore.inventory.InventoryHandler;
 
-public final class SophisticatedBackpacksCompat {
+public final class SophisticatedBackpacksCompat implements BackpackScanner.Scanner {
+
+    public static final SophisticatedBackpacksCompat INSTANCE = new SophisticatedBackpacksCompat();
 
     private SophisticatedBackpacksCompat() {
     }
 
-    public static LockType checkLock(ItemStack stack, Player player) {
+    @Override
+    public boolean isAvailable() {
+        return true;
+    }
+
+    @Override
+    public LockType checkLock(ItemStack stack, Player player) {
         if (!(stack.getItem() instanceof BackpackItem)) {
             return LockType.UNLOCK;
         }

@@ -11,7 +11,9 @@
     "InventorySetItemMixin",
     "ContainerClickContextMixin",
     "ArmorItemDispenseMixin",
-    "LivingEntityEffectMixin"
+    "LivingEntityEffectMixin",
+    "ItemEntityPickupMixin",
+    "LivingEntityUseItemMixin"
   ],
   "injectors": {
     "defaultRequire": 1

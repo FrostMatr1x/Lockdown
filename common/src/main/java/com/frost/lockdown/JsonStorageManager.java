@@ -3,7 +3,6 @@ package com.frost.lockdown;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -15,11 +14,24 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JsonStorageManager {
+public final class JsonStorageManager {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final String FILE_NAME = "lockdownban.json";
 
-    private static final Path FILE_PATH = FMLPaths.CONFIGDIR.get().resolve("lockdownban.json");
+    private static volatile Path filePath;
+
+    private JsonStorageManager() {
+    }
+
+    public static void init(Path configDir) {
+        filePath = configDir.resolve(FILE_NAME);
+    }
+
+    private static Path path() {
+        Path path = filePath;
+        return path != null ? path : Path.of("config", FILE_NAME);
+    }
 
     public record DataEntry(String nickname, String date, String item, int quantity) {}
 
@@ -35,11 +47,12 @@ public class JsonStorageManager {
     }
 
     public static List<DataEntry> loadEntries() {
-        if (!Files.exists(FILE_PATH)) {
+        Path path = path();
+        if (!Files.exists(path)) {
             return new ArrayList<>();
         }
 
-        try (FileReader reader = new FileReader(FILE_PATH.toFile())) {
+        try (FileReader reader = new FileReader(path.toFile())) {
             List<DataEntry> entries = GSON.fromJson(reader, new TypeToken<List<DataEntry>>() {}.getType());
             return entries != null ? entries : new ArrayList<>();
         } catch (IOException e) {
@@ -49,11 +62,12 @@ public class JsonStorageManager {
     }
 
     private static void saveEntries(List<DataEntry> entries) {
+        Path path = path();
         try {
-            if (FILE_PATH.getParent() != null) {
-                Files.createDirectories(FILE_PATH.getParent());
+            if (path.getParent() != null) {
+                Files.createDirectories(path.getParent());
             }
-            try (FileWriter writer = new FileWriter(FILE_PATH.toFile())) {
+            try (FileWriter writer = new FileWriter(path.toFile())) {
                 GSON.toJson(entries, writer);
             }
         } catch (IOException e) {

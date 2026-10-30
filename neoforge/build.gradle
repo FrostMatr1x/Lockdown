@@ -37,6 +37,7 @@ loom {
     mods {
         "${rootProject.mod_id}" {
             sourceSet "main"
+            sourceSet "main", project(":common")
         }
     }
 }

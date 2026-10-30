@@ -12,6 +12,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.ResourceArgument;
 import net.minecraft.core.Holder;
@@ -24,12 +25,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.scores.Scoreboard;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
-@EventBusSubscriber(modid = Lockdown.MODID)
-public class LockdownCommands {
+public final class LockdownCommands {
+
+    private LockdownCommands() {
+    }
 
     private static final SuggestionProvider<CommandSourceStack> ITEM_SUGGESTIONS =
             (context, builder) -> {
@@ -44,9 +44,7 @@ public class LockdownCommands {
                 return builder.buildFuture();
             };
 
-    @SubscribeEvent
-    public static void onRegisterCommands(RegisterCommandsEvent event) {
-        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext buildContext) {
 
         dispatcher.register(Commands.literal("lockdown")
                 .requires(source -> source.hasPermission(4))
@@ -96,31 +94,31 @@ public class LockdownCommands {
                 .then(Commands.literal("effect")
                     .then(Commands.literal("ban")
                         .then(Commands.argument("effect",
-                                        ResourceArgument.resource(event.getBuildContext(), Registries.MOB_EFFECT))
+                                        ResourceArgument.resource(buildContext, Registries.MOB_EFFECT))
                             .executes(LockdownCommands::banEffect)))
                     .then(Commands.literal("unban")
                         .then(Commands.argument("effect",
-                                        ResourceArgument.resource(event.getBuildContext(), Registries.MOB_EFFECT))
+                                        ResourceArgument.resource(buildContext, Registries.MOB_EFFECT))
                             .executes(LockdownCommands::unbanEffect)))
                     .then(Commands.literal("cap")
                         .then(Commands.argument("effect",
-                                        ResourceArgument.resource(event.getBuildContext(), Registries.MOB_EFFECT))
+                                        ResourceArgument.resource(buildContext, Registries.MOB_EFFECT))
                             .then(Commands.argument("level", IntegerArgumentType.integer(0, 255))
                                 .executes(LockdownCommands::capEffect))))
                     .then(Commands.literal("uncap")
                         .then(Commands.argument("effect",
-                                        ResourceArgument.resource(event.getBuildContext(), Registries.MOB_EFFECT))
+                                        ResourceArgument.resource(buildContext, Registries.MOB_EFFECT))
                             .executes(LockdownCommands::uncapEffect)))
                     .then(Commands.literal("bypass")
                         .then(Commands.literal("add")
                             .then(Commands.argument("effect",
-                                            ResourceArgument.resource(event.getBuildContext(), Registries.MOB_EFFECT))
+                                            ResourceArgument.resource(buildContext, Registries.MOB_EFFECT))
                                 .then(Commands.argument("item", StringArgumentType.string())
                                     .suggests(ITEM_SUGGESTIONS)
                                     .executes(LockdownCommands::addBypass))))
                         .then(Commands.literal("remove")
                             .then(Commands.argument("effect",
-                                            ResourceArgument.resource(event.getBuildContext(), Registries.MOB_EFFECT))
+                                            ResourceArgument.resource(buildContext, Registries.MOB_EFFECT))
                                 .then(Commands.argument("item", StringArgumentType.string())
                                     .suggests(ITEM_SUGGESTIONS)
                                     .executes(LockdownCommands::removeBypass)))))

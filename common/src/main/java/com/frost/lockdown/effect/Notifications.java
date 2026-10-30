@@ -3,11 +3,10 @@ package com.frost.lockdown.effect;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.frost.lockdown.Config;
 import com.frost.lockdown.Messages;
+import com.frost.lockdown.config.Setting;
 
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class Notifications {
 
@@ -17,8 +16,8 @@ public final class Notifications {
     private Notifications() {
     }
 
-    public static void send(Player player, ModConfigSpec.ConfigValue<String> key, Object... placeholders) {
-        String notifyKey = player.getUUID() + "|" + key.getPath().getLast();
+    public static void send(Player player, Setting<String> key, Object... placeholders) {
+        String notifyKey = player.getUUID() + "|" + key.id();
         long now = player.level().getGameTime();
         Long last = COOLDOWN.get(notifyKey);
         if (last != null && now - last < COOLDOWN_TICKS) {
