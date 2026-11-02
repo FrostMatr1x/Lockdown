@@ -1,0 +1,27 @@
+plugins {
+    id "dev.architectury.loom"
+}
+
+architectury {
+    common(["fabric", "neoforge"] as String[]) {
+        it.platformPackage "neoforge", "forge"
+    }
+}
+
+loom {
+    silentMojangMappingsLicense()
+
+    mixin {
+        useLegacyMixinAp = false
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+    mappings loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${rootProject.parchment_minecraft_version}:${rootProject.parchment_mappings_version}@zip")
+    }
+
+    compileOnly "net.fabricmc:sponge-mixin:0.15.2+mixin.0.8.7"
+}

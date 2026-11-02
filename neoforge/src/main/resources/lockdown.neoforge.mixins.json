@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.frost.lockdown.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ItemHandlerInsertMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

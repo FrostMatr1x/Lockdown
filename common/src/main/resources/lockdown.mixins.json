@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.frost.lockdown.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "InventoryAddMixin",
+    "ContainerClickMixin",
+    "SlotSetMixin",
+    "PlaceBackMixin",
+    "InventorySetItemMixin",
+    "ContainerClickContextMixin",
+    "ArmorItemDispenseMixin",
+    "LivingEntityEffectMixin",
+    "ItemEntityPickupMixin",
+    "LivingEntityUseItemMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
